@@ -1,10 +1,10 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\Farmer;
-
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Farmer;
+use App\Models\User;
+
 
 class FarmerController extends Controller
 {
@@ -12,34 +12,59 @@ class FarmerController extends Controller
     public function index()
     {
         $farmers = Farmer::all();
-        return response()->json($farmers);
+        return view('farmers.index', compact('farmers'));
+    }
+
+    public function create()
+    {
+        return view('farmers.create');  
     }
 
     //create a new farmer
-    public function store(Request $request)
+    public function store(Request $request, )
     {
-        $farmer = Farmer::create($request->all());
-        return response()->json($farmer);
+        $request->validate([
+            'farm_name'=>'required',
+            'location'=>'required'
+        ]);
+
+        Farmer::create([
+            'user_id' => auth()->id(),
+            'farm_name'=>$request->farm_name,
+            'location'=>$request->location,
+        ]);
+
+        return redirect()->route('farmers.index')->with('success','Farmer register successfully.');
     }
 
     //get a single farmer
-    public function show($id)
+    public function show(Farmer $farmer)
     {
-        $farmer = Farmer::find($id);
-        return response()->json($farmer);
+        return view('farmers.show', compact('farmer'));
+    }
+
+    public function edit(Farmer $farmer)
+    {
+        return view('farmers.edit', compact('farmer'));
     }
 
     //update a farmer's details
-    public function update(Request $request, $id)
+    public function update(Request $request, Farmer $farmer)
     {
-        $farmer = Farmer::find($id);
+        $request->validate([
+            'farm_name'=>'required',
+            'location'=>'required',
+        ]);
+
         $farmer->update($request->all());
-        return response()->json($farmer);
+
+        return redirect()->route('farmers.index')->with('success','Farmer updated successfully');
     }
 
-    public function destroy($id)
+    public function destroy(Farmer $farmer)
     {
-        Farmer::destroy($id);
-        return response()->json(null, 204);
+        $farmer->delete();
+
+        return redirect()->route('farmers.index')->with('success','Farmer deleted');
     }
 }
